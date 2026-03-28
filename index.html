@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>水韵江苏文旅服务网站</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+
+  <script>
+    // 只在旅游详情页面加载Coze SDK
+    window.addEventListener('load', function () {
+      // 检查当前页面是否为旅游详情页面
+      const currentUrl = window.location.href;
+      const targetUrlPattern = /front\/tourismDetail/;
+
+      if (targetUrlPattern.test(currentUrl)) {
+        console.log('当前页面是旅游详情页，加载AI客服');
+
+        // 动态加载Coze SDK
+        const script = document.createElement('script');
+        script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
+        script.onload = function () {
+          console.log('Coze SDK加载完成');
+          initCozeChat();
+        };
+        script.onerror = function () {
+          console.error('Coze SDK加载失败');
+        };
+        document.head.appendChild(script);
+      } else {
+        console.log('当前页面不是旅游详情页，不加载AI客服');
+        // 清理可能存在的AI客服元素
+        setTimeout(() => {
+          const cozeElements = document.querySelectorAll('[class*="coze"], [class*="chat"]');
+          cozeElements.forEach(el => {
+            el.remove();
+          });
+        }, 1000);
+      }
+    });
+
+    // 初始化Coze聊天
+    function initCozeChat() {
+      if (typeof CozeWebSDK === 'undefined') {
+        console.error('CozeWebSDK未定义');
+        return;
+      }
+
+      const cozeChatClient = new CozeWebSDK.WebChatClient({
+        config: {
+          type: 'bot',
+          bot_id: '7621776412202106914',
+          isIframe: false,
+        },
+        auth: {
+          type: 'token',
+          token: 'pat_r2FIRnzw2OpaZT8nD2BXguUmzmB6uMNoJoK3MeCVpp1cIK37ycobMHIOPvWFFURE',
+          onRefreshToken: async () => 'pat_r2FIRnzw2OpaZT8nD2BXguUmzmB6uMNoJoK3MeCVpp1cIK37ycobMHIOPvWFFURE'
+        },
+        userInfo: {
+          id: 'user',
+          url: 'https://c-ssl.dtstatic.com/uploads/item/202003/18/20200318091411_bopif.thumb.400_0.jpg',
+          nickname: '游客',
+        },
+        ui: {
+          base: {
+            icon: '../src/assets/imgs/水韵江苏.png',
+            layout: 'pc',
+            lang: 'zh-CN',
+            zIndex: 1000
+          },
+          header: { isShow: true, isNeedClose: true },
+          asstBtn: { isNeed: false }, // 隐藏悬浮按钮
+          chatBot: {
+            title: '水韵江苏文旅AI客服',
+            width: 400
+          }
+        }
+      });
+
+      // 暴露全局方法供页面调用
+      window.openAIChat = function () {
+        console.log('打开AI客服');
+        if (cozeChatClient) {
+          if (cozeChatClient.showChatBot) {
+            cozeChatClient.showChatBot();
+          } else {
+            const chatWindow = document.querySelector('[class*="coze"][class*="chat"]');
+            if (chatWindow) {
+              chatWindow.style.display = 'block';
+            }
+          }
+        }
+      };
+    }
+  </script>
+</body>
+
+</html>
